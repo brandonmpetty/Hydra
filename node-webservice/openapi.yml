@@ -1,0 +1,310 @@
+# Verify Schema: https://editor.swagger.io
+openapi: 3.0.0
+info:
+  title: Example Webservice API
+  description: A RESTful webservice that exposes a Data Mart with OData.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+
+  /api/example/:
+
+    post:
+      description: Create the specific record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesInput'
+      responses:
+        200:
+          description: returns the created record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sales'
+
+    get:
+      description: Process all target records using OData
+      parameters:
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/expand'
+        - $ref: '#/components/parameters/skip'
+        - $ref: '#/components/parameters/top'
+        - $ref: '#/components/parameters/count'
+        - $ref: '#/components/parameters/filter'
+        - $ref: '#/components/parameters/orderby'
+        - $ref: '#/components/parameters/apply_aggregate'
+      responses:
+        200:
+          description: returns a set of records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sales'
+        400:
+          $ref: '#/components/responses/IllegalInput'
+
+  /api/example/{id}:
+
+    get:
+      description: Returns the specific record with limited OData support
+      parameters:
+        - $ref: '#/components/parameters/id'
+        - $ref: '#/components/parameters/select'
+        - $ref: '#/components/parameters/expand'
+      responses:
+        200:
+          description: returns the specific record
+          headers:
+            Last-Modified:
+              description: The date the record was last modified
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sales'
+        400:
+          $ref: '#/components/responses/IllegalInput'
+
+    put:
+      description: Upserts an entire record
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesInput'
+      responses:
+        200:
+          description: returns the upserted record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sales'
+
+    patch:
+      description: Updates part of a specific record
+      parameters:
+        - $ref: '#/components/parameters/id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesInput'
+      responses:
+        200:
+          description: returns the updated record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sales'
+
+    delete:
+      description: Deletes a specific record
+      parameters:
+        - $ref: '#/components/parameters/id'
+      responses:
+        200:
+          description: returns the deleted record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sales'
+
+components:
+
+  schemas:
+
+    # Data Mart Example
+    Time:
+      type: object
+      properties:
+        id:
+          type: integer
+        year:
+          type: integer
+        month:
+          type: integer
+        day:
+          type: integer
+        dayOfWeek:
+          type: integer
+        quarter:
+          type: integer
+    
+    Item:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        brand:
+          type: string
+        type:
+          type: string
+
+    Location:
+      type: object
+      properties:
+        id:
+          type: integer
+        country:
+          type: string
+        state:
+          type: string
+        city:
+          type: string
+        street:
+          type: string
+
+    SalesInput:
+      type: object
+      required:
+        - timeId
+        - itemId
+        - locationId
+        - dollarsSold
+        - unitsSold
+      properties:
+        id:
+          type: integer
+        timeId:
+          type: integer
+        itemId:
+          type: integer
+        locationId:
+          type: integer
+
+        dollarsSold:
+          type: number
+          format: currency
+        unitsSold:
+          type: integer
+      
+    Sales:
+      allOf:
+        - $ref: '#/components/schemas/SalesInput'
+        - type: object
+          properties:
+            time:
+              type: object
+              $ref: '#/components/schemas/Time'
+            item:
+              type: object
+              $ref: '#/components/schemas/Item'
+            location:
+              type: object
+              $ref: '#/components/schemas/Location'
+
+  parameters:
+
+    # Common Url Parameters
+    id:
+      name: id
+      in: path
+      required: true
+      description: Numeric ID of the record to retrieve.
+      schema:
+        type: integer
+
+    # OData Parameters
+    skip:
+      name: $skip
+      in: query
+      description: number of items to skip
+      required: false
+      schema:
+        type: integer
+
+    top:
+      name: $top
+      in: query
+      description: number of items to take
+      required: false
+      schema:
+        type: integer
+
+    count:
+      name: $count
+      in: query
+      description: counts the number of results
+      required: false
+      schema:
+        type: boolean
+      allowEmptyValue: true
+
+    orderby:
+      name: $orderby
+      in: query
+      explode: false
+      description: counts the number of results
+      required: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          pattern: ^[a-zA-Z0-9_/]* (asc|desc)
+          example: time/year desc
+
+    select:
+      name: $select
+      in: query
+      explode: false
+      description: filters through only the selected columns
+      required: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+
+    expand:
+      name: $expand
+      in: query
+      explode: false
+      description: expands related entities
+      required: false
+      schema:
+        type: array
+        uniqueItems: true
+        items:
+          type: string
+          
+    filter:
+      name: $filter
+      in: query
+      description: apply a where clause to the query
+      required: false
+      schema:
+        type: string
+        pattern: ^[a-zA-Z0-9_/]* (eq|ne|gt|lt|ge|le) [a-zA-Z0-9_.']*(?:\s(and|or) [a-zA-Z0-9_/]* (eq|ne|gt|lt|ge|le) [a-zA-Z0-9_.']*)*$
+        example: time/year eq 2020 and unitsSold gt 10
+      
+    apply_aggregate:
+      name: $apply
+      in: query
+      description: applys an aggregate function
+      required: false
+      schema:
+        type: string
+        pattern: ^aggregate\((\$count|[a-zA-Z0-9_/]* with (sum|min|max|average))(?:,\s?(\$count|[a-zA-Z0-9_/]* with (sum|min|max|average)))*\)$
+        example: aggregate(dollarsSold with average)
+
+  responses:
+
+    IllegalInput:
+     description: Illegal input for operation

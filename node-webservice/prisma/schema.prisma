@@ -1,0 +1,83 @@
+// For more info about the Prisma Schema format: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["orderByRelation"]
+}
+
+// Prisma Models - Star Schema design example
+// The following example depicts a Data Mart with a grain of 'day'.
+// It is used in analytics and reporting, hence all of the indexes.
+// If you are not familiar with Start Schema design, I suggest:
+//    Star Schema: The Compelete Reference, Christopher Adamson
+
+// Time Dimension
+model Time {
+  id        Int @id
+  year      Int // consider a composite with 'month'
+  month     Int
+  day       Int // No need to index
+  dayOfWeek Int
+  quarter   Int
+
+  @@index(year)
+  @@index(month)
+  @@index(dayOfWeek)
+  @@index(quarter)
+
+  Sales Sales[]
+}
+
+// Item Dimension
+model Item {
+  id    Int    @id @default(autoincrement())
+  name  String
+  brand String
+  type  String
+
+  @@index(name)
+  @@index(brand)
+  @@index(type)
+
+  Sales Sales[]
+}
+
+// Location Dimension
+model Location {
+  id      Int    @id @default(autoincrement())
+  country String
+  state   String
+  city    String
+  street  String // No need to index
+
+  // You must always provide context for state and city
+  @@index([country, state, city])
+
+  Sales Sales[]
+}
+
+// Sales Fact
+model Sales {
+  // Keys and Relationships
+  id         Int      @id @default(autoincrement())
+  timeId     Int
+  time       Time     @relation(fields: [timeId], references: [id])
+  itemId     Int
+  item       Item     @relation(fields: [itemId], references: [id])
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id])
+
+  // Measures
+  dollarsSold Decimal
+  unitsSold   Int
+
+  // Covered indexes
+  @@index(timeId)
+  @@index(itemId)
+  @@index(locationId)
+}
