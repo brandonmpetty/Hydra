@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
 
-namespace dotnetcore_webservice
+namespace webservice
 {
     public class Program
     {

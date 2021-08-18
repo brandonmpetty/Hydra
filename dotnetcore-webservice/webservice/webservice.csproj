@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>dotnetcore_webservice</RootNamespace>
+    <RootNamespace>webservice</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
