@@ -23,7 +23,7 @@ namespace webservice
         public void ConfigureServices(IServiceCollection services)
         {
             // Dependency Injection
-            services.AddSingleton<ISalesService, SalesService>();
+            services.AddTransient<ISalesService, SalesService>();
 
             // Expose OData capabilities to the controllers
             services.AddControllers()

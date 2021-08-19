@@ -43,7 +43,6 @@ export default class ExampleRouter {
             this.exampleController.put.bind(this.exampleController));
 
         router.post('/', 
-            expressValidatorMiddleware,
             this.exampleController.post.bind(this.exampleController));
 
         router.patch('/:id', 
