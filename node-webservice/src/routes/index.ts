@@ -18,6 +18,14 @@ const exampleController = new ExampleController(exampleService);
  */
 export default function routeLoader(app: Express): void {
 
+    // Host OpenAPI for development purposes only
+    if (app.get('env') === 'development') {
+
+        app.use('/openapi.yml', function(req, res){
+            res.sendFile('openapi.yml', { root: '.' });
+        });
+    }
+
     const exampleRouter = new ExampleRouter(exampleController);
     app.use(`/api/${exampleRouter.routeName}`, exampleRouter.create());
     // TODO: Add other routes here
