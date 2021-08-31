@@ -1,0 +1,22 @@
+version: “3”
+services:
+  # Node web service production image builder
+  node-webservice:
+    image: hydra/node-webservice
+    build: ./node-webservice
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./node-webservice/prisma:/usr/app/prisma:rw
+  
+  # TODO .Net Core web service production image builder
+
+  # Security scan the Node web service
+  zap-node:
+    image: owasp/zap2docker-stable:2.10.0
+    command: zap-api-scan.py -t http://host.docker.internal:3000/openapi.yml -f openapi -r node-webservice-report.html
+    volumes:
+      - ./node-webservice/security:/zap/wrk:rw
+    # If running a Linux host
+    # - /etc/timezone:/etc/timezone:ro
+    # - /etc/localtime:/etc/localtime:ro

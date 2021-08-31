@@ -5,7 +5,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
-    "build": "npx webpack",
+    "build": "npx prisma generate && npx webpack",
     "start": "node dist/index.js",
     "test": "npx jasmine-ts --config=jasmine.json",
     "test-coverage": "npx nyc npm run test",

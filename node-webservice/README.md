@@ -18,7 +18,7 @@ npm run dev
 ### Client
 Query a webservice resource:
 ```
-curl http://localhost:3000/api/example?$take=10
+curl http://localhost:3000/api/example?$top=10
 ```
 <hr>
 <br/>
@@ -52,8 +52,35 @@ NPM provides the following *run* commands for building and managing the project:
 * `npm run lint` - Perform static code analysis with eslint
 * `npm run doc` - Generate API documentation in [/docs](docs/index.html)
 
+### Docker
+[Docker](https://docs.docker.com) is optionally used for creating images optimized for *production*.  Start a production container, after ensuring your database is created and seeded locally, by running:
+```
+docker-compose up node-webservice
+```
+
+### Zed Attack Proxy Scan
+[OWASP® Zed Attack Proxy](https://www.zaproxy.org) is the leading open-source web security vulnerability scanner.  [Docker](https://docs.docker.com) is a prerequisite, allowing us to reduce a large amount of complexity into a single command.
+
+To scan `node-webservice`, ensure that your service is running in dev mode:
+```
+npm run dev
+```
+
+**NOTE**  The web service will not host the required `openapi.yml` publically in *production* mode for security reasons.
+
+Then, in another console, run the ZAP scan:
+```
+docker-compose up zap-node
+```
+
+**NOTE**  If this is your first run, it may take a while to download the initial Docker images.
+
+Your security report will be located at: `security/node-webservice-report.html`
+
+
 ### Visual Studio Code
 This project was developed using VSC and contains the [launch.json](.vscode/launch.json) and [settings.json](.vscode/settings.json) files required to build and test the codebase.  Ensure you have the **Jasmine Test Explorer** installed.
+
 <hr/>
 <br/>
 

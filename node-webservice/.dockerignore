@@ -1,0 +1,6 @@
+node_modules
+prisma
+unittests
+coverage
+logs
+security
