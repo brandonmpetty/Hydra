@@ -9,6 +9,7 @@ namespace webservice.Controllers
     /// <summary>
     /// An example controller that shows how to extend CRUDController.
     /// </summary>
+    [ResponseCache(CacheProfileName = "NoCache")]
     public class SalesController: CRUDController<SalesModel>
     {
         public SalesController(ISalesService service)

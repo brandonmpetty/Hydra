@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using webservice.Services;
+using Microsoft.AspNetCore.Mvc;
 
 
 namespace webservice
@@ -22,16 +23,22 @@ namespace webservice
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Dependency Injection
+            // Dependency Injection - DB Contexts and Services
+            services.AddDbContext<SalesContext>(opt =>
+                opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+
             services.AddTransient<ISalesService, SalesService>();
 
-            // Expose OData capabilities to the controllers
-            services.AddControllers()
-                .AddOData(opt => opt.Filter().Select().Expand().OrderBy().Count());
+            // Expose OData capabilities to the controllers along with Cache Profiles
+            services.AddControllers(options =>
 
-            // Initialize Entity Contexts
-            services.AddDbContext<SalesContext>(opt =>
-                                               opt.UseInMemoryDatabase("DataMart"));
+                  // Cache Profile: Disables caching on route
+                  options.CacheProfiles.Add("NoCache", new CacheProfile
+                  {
+                      Location = ResponseCacheLocation.None,
+                      NoStore = true
+                  }))
+              .AddOData(opt => opt.Filter().Select().Expand().OrderBy().Count());
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
