@@ -1,6 +1,10 @@
 ﻿
+using System.ComponentModel.DataAnnotations.Schema;
+
+
 namespace webservice.Models
 {
+    [Table("SalesFact")]
     public class SalesModel : EntityModel
     {
         public TimeModel Time { get; set; }
