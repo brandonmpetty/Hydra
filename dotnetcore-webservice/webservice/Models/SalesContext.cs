@@ -64,7 +64,7 @@ namespace webservice.Models
             int Y = start.Month > 2 ? start.Year - C * 1000 : start.Year - C * 1000 - 1;
             int dayOfWeek = (int)(
                 start.Day +
-                Math.Floor((2.6 * ((start.Day - 2) % 12)) - 0.2) -
+                ((2.6 * ((start.Day - 2) % 12)) - 0.2) -
                 2 * C +
                 Y +
                 (Y / 4) +

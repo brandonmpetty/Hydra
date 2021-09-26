@@ -8,6 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using webservice.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using webservice.Library.Swagger;
 
 
 namespace webservice
@@ -24,6 +28,7 @@ namespace webservice
         public void ConfigureServices(IServiceCollection services)
         {
             // Dependency Injection - DB Contexts and Services
+            services.AddHttpClient(); // DIs IHttpClientFactory
             services.AddDbContext<SalesContext>(opt =>
                 opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
@@ -38,10 +43,34 @@ namespace webservice
                       Location = ResponseCacheLocation.None,
                       NoStore = true
                   }))
-              .AddOData(opt => opt.Filter().Select().Expand().OrderBy().Count());
+              .AddOData(opt => opt.Select().Expand().Count().Filter().OrderBy().SkipToken().SetMaxTop(50));
+
+            // API Versioning Support: https://github.com/microsoft/aspnet-api-versioning/wiki/API-Versioning-Options
+            services.AddApiVersioning(options =>
+            {
+                // Adds headers: "api-supported-versions", "api-deprecated-versions"
+                options.ReportApiVersions = true;
+
+                // Set Default when unspecified
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                //options.DefaultApiVersion = new ApiVersion(1, 0);
+            });
+
+            services.AddVersionedApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'VVV"; // 'v'major[.minor][-status]
+                options.SubstituteApiVersionInUrl = true;
+            });
+
+            services.AddSingleton<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+            
+            services.AddSwaggerGen(options => {
+                options.OperationFilter<AddODataParameters>();
+                options.DocumentFilter<RemoveDefaultApiVersionRoute>();
+            });
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IApiVersionDescriptionProvider provider)
         {
             if (env.IsDevelopment())
             {
@@ -49,6 +78,21 @@ namespace webservice
             }
 
             app.UseRouting();
+            app.UseSwagger();
+
+            if (env.IsDevelopment())
+            {
+                app.UseSwaggerUI(options => {
+                    foreach (var description in provider.ApiVersionDescriptions)
+                    {
+                        var name = description.IsDeprecated ?
+                            $"{description.GroupName.ToUpperInvariant()} [DEPRECATED]":
+                            description.GroupName.ToUpperInvariant();
+
+                        options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", name);
+                    }
+                });
+            }
 
             //app.UseAuthorization();
 
