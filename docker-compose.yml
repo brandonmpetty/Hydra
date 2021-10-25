@@ -1,4 +1,4 @@
-version: “3”
+version: "3"
 services:
   # Node web service production image builder
   node-webservice:
@@ -9,7 +9,14 @@ services:
     volumes:
       - ./node-webservice/prisma:/usr/app/prisma:rw
   
-  # TODO .Net Core web service production image builder
+  # .Net Core web service production image builder
+  dotnetcore-webservice:
+    image: hydra/dotnetcore-webservice
+    build: ./dotnetcore-webservice
+    ports:
+      - "3001:80"
+    volumes:
+      - ./dotnetcore-webservice/webservice/Entity:/app/Entity:rw
 
   # Security scan the Node web service
   zap-node:
@@ -20,3 +27,11 @@ services:
     # If running a Linux host
     # - /etc/timezone:/etc/timezone:ro
     # - /etc/localtime:/etc/localtime:ro
+  # Security scan the Node web service
+  
+  
+  zap-dotnetcore:
+    image: owasp/zap2docker-stable:2.10.0
+    command: zap-api-scan.py -t http://host.docker.internal:3001/swagger/api/v1/swagger.json -f openapi -r dotnetcore-webservice-report.html
+    volumes:
+      - ./dotnetcore-webservice/security:/zap/wrk:rw

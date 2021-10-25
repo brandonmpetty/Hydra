@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using webservice.Library.Swagger;
-
+using webservice.Library.Middleware;
 
 namespace webservice
 {
@@ -27,6 +27,8 @@ namespace webservice
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddCors();
+
             // Dependency Injection - DB Contexts and Services
             services.AddHttpClient(); // DIs IHttpClientFactory
             services.AddDbContext<SalesContext>(opt =>
@@ -77,11 +79,20 @@ namespace webservice
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseRouting();
-            app.UseSwagger();
+            app.UseCors(x => x
+                .SetIsOriginAllowed(origin => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials());
 
-            if (env.IsDevelopment())
+            app.UseRouting();
+
+            app.UseMiddleware<ExceptionHandlerMiddleware>();
+            
+            // Restict Swagger to development only
+            //if (env.IsDevelopment())
             {
+                app.UseSwagger();
                 app.UseSwaggerUI(options => {
                     foreach (var description in provider.ApiVersionDescriptions)
                     {
@@ -93,8 +104,6 @@ namespace webservice
                     }
                 });
             }
-
-            //app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
